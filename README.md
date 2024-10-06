@@ -21,11 +21,11 @@ python -m venv venv
 Activate it
 #### Windows
 ```
-./venv/Scripts/activate
+venv\scripts\activate
 ```
 #### Unix/MacOS
 ```
-source ./venv/bin/activate
+source venv/bin/activate
 ```
 
 ### Install dependencies
