@@ -33,6 +33,8 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 ## Usage
+As an example you can use this [images][https://drive.google.com/drive/folders/1ILjpEHc2KRVD2a4VQZ3XDQVjrFzkVjbH]
+
 ```
 python img-red-sort.py -d <directory with images>
 ```
