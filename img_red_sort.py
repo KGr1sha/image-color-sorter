@@ -4,6 +4,7 @@ import numpy as np
 import os
 import argparse
 from dataclasses import dataclass
+from savepdf import draw_to_pdf
 
 
 @dataclass
@@ -11,6 +12,7 @@ class Options:
     red_treshold = 0.2
     img_dir = "."
     downscale_factor = 0.3
+    output_name = 'output'
 
 
 class Image:
@@ -93,7 +95,11 @@ def main(options : Options):
     for image in red_images:
         print(f'{image.name} --- {image.redness}')
 
-    draw_to_pdf(red_images)
+    draw_to_pdf(
+        [image.path for image in red_images],
+        options.output_name
+    )
+    print(f'{options.output_name} is created')
 
 
 def parse_args() -> Options:
@@ -113,6 +119,11 @@ def parse_args() -> Options:
         help='images will be scaled by this number before analyzing',
         default='0.3'
     )
+    parser.add_argument(
+        '--output', '-o',
+        help='name of the output file',
+        default='output', dest='output_name'
+    )
 
     options = Options()
 
@@ -120,6 +131,7 @@ def parse_args() -> Options:
     options.img_dir = args.imgdir
     options.red_treshold = float(args.red_tr)
     options.downscale_factor = float(args.downscale)
+    options.output_name = args.output_name
 
     return options
 
