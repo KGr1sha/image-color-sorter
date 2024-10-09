@@ -36,9 +36,9 @@ pip install -r requirements.txt
 As an example you can use this [images](https://drive.google.com/drive/folders/1ILjpEHc2KRVD2a4VQZ3XDQVjrFzkVjbH)
 
 ```
-python img-red-sort.py -d <directory with images>
+python img_red_sort.py -d <directory with images>
 ```
 To see more options use
 ```
-python img-red-sort.py --help
+python img_red_sort.py --help
 ```
