@@ -13,6 +13,36 @@ class Options:
     downscale_factor = 0.3
 
 
+class Image:
+    def __init__(self, path : str, name : str) -> None:
+        self.name = name
+        self.path = path
+        self.data : MatLike
+        self.shape : tuple[int, int] = (0, 0)
+        self.redness : float = 0
+
+    def load(self) -> None:
+        self.data = cv2.cvtColor(
+            cv2.imread(self.path),
+            cv2.COLOR_BGR2HSV
+        )
+        if self.data is None:
+            print("Failed to load image, check the path")
+        self.shape = self.data.shape[0], self.data.shape[1]
+
+    def downscale(self, factor : float) -> None:
+        height = int(self.shape[0] * factor)
+        width = int(self.shape[1] * factor)
+        dim = (height, width)
+        self.data = cv2.resize(self.data, dim)
+        self.shape = dim
+
+    def calculate_redness(self) -> None:
+        self.data = self.data.astype(np.int64)
+        mask = ((self.data[:, :, 0] <= 10) | (self.data[:, :, 0] >= 170)) & (self.data[:, :, 1] > 150) & (self.data[:, :, 2] > 75)
+        self.redness = sum(mask.flatten()) / (self.shape[0] * self.shape[1])
+
+
 def load_names(dir_name : str) -> list[str]:
     imgnames = []
     dir = os.fsencode(dir_name)
@@ -24,36 +54,18 @@ def load_names(dir_name : str) -> list[str]:
     return imgnames
 
 
-def load_images(dir : str, names : list[str]) -> dict[str,MatLike]:
-    images = {}
+def load_images(dir : str, names : list[str]) -> list[Image]:
+    images = []
     for name in names:
         path = os.path.join(dir, name)
-        image = cv2.imread(path)
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-        images[name] = image
-        if image is None:
-            print(f'Failed to load image: {name}')
+        image = Image(path, name)
+        image.load()
+        images.append(image)
 
     return images
 
 
-def downscale(image : MatLike, factor : float):
-    height = int(image.shape[0] * factor)
-    width = int(image.shape[1] * factor)
-    dim = (height, width)
-    return cv2.resize(image, dim)
-
-
-def redness(image : MatLike) -> float:
-    y_shape = image.shape[0]
-    x_shape = image.shape[1]
-    image = image.astype(np.int64)
-    mask = ((image[:, :, 0] <= 10) | (image[:, :, 0] >= 170)) & (image[:, :, 1] > 150) & (image[:, :, 2] > 75)
-    return sum(mask.flatten()) / (y_shape * x_shape)
-
-
 def main(options : Options):
-    image_to_redness : dict[str, float] = {}
     image_names = load_names(options.img_dir)
     print(f'LOADED {len(image_names)} images')
     if len(image_names) == 0: 
@@ -62,28 +74,24 @@ def main(options : Options):
 
     images = load_images(options.img_dir, image_names)
 
-    for image_name in images:
-        images[image_name] = downscale(
-            images[image_name],
-            options.downscale_factor
-        )
+    for image in images:
+        image.downscale(options.downscale_factor)
+        image.calculate_redness()
 
-    for image_name, image in images.items():
-        image_to_redness[image_name] = redness(image)
-
-    image_names.sort(
-        key=lambda k: image_to_redness[k],
+    images.sort(
+        key=lambda img: img.redness,
         reverse=True
     )
 
-    red_images = filter(
-        lambda name: image_to_redness[name] >= options.red_treshold,
-        image_names
-    )
+    red_images :list[Image]= []
+
+    for image in images:
+        if image.redness >= options.red_treshold:
+            red_images.append(image)
 
     print("name --- redness")
-    for name in red_images:
-        print(f'{name} --- {image_to_redness[name]}')
+    for image in red_images:
+        print(f'{image.name} --- {image.redness}')
 
 
 def parse_args() -> Options:
