@@ -93,6 +93,8 @@ def main(options : Options):
     for image in red_images:
         print(f'{image.name} --- {image.redness}')
 
+    draw_to_pdf(red_images)
+
 
 def parse_args() -> Options:
     parser = argparse.ArgumentParser()
